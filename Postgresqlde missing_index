@@ -1,0 +1,14 @@
+
+CREATE VIEW "public"."missing_index" AS  SELECT pg_stat_all_tables.relname AS tablename,
+    (pg_stat_all_tables.seq_scan - pg_stat_all_tables.idx_scan) AS totalseqscan,
+        CASE
+            WHEN ((pg_stat_all_tables.seq_scan - pg_stat_all_tables.idx_scan) > 0) THEN 'Missing Index Found'::text
+            ELSE 'Missing Index Not Found'::text
+        END AS missingindex,
+    pg_size_pretty(pg_relation_size((pg_stat_all_tables.relname)::regclass)) AS tablesize,
+    pg_stat_all_tables.idx_scan AS totalindexscan
+   FROM pg_stat_all_tables
+  WHERE ((pg_stat_all_tables.schemaname = 'public'::name) AND (pg_relation_size((pg_stat_all_tables.relname)::regclass) > 100000))
+  ORDER BY (pg_stat_all_tables.seq_scan - pg_stat_all_tables.idx_scan) DESC;
+
+ALTER TABLE "public"."missing_index" OWNER TO "postgres";
